@@ -40,23 +40,26 @@ namespace CFE
         {
             if (Loader.Random.Next(100) < plugin.Config.ExplosionPercentage || (plugin.Config.LobbyExplode && !Round.IsStarted))
             {
+                var OldPlayerRole = ev.Player.Role;
                 bool beforeRoundStart = Round.IsStarted;
                 ExplosiveGrenade grenade = (ExplosiveGrenade) Item.Create(ItemType.GrenadeHE);
                 Timing.CallDelayed(1.83f, () =>
                 {
-                    if (Round.IsStarted || plugin.Config.EnabledInLobby)
+                    if ((Round.IsStarted || plugin.Config.EnabledInLobby) && OldPlayerRole == ev.Player.Role)
                     {
                         if (beforeRoundStart != Round.IsStarted)
                         {
                             return;
                         }
+                        var savedPlayerPosition = ev.Player.Position;
+                        var savedPlayerTeam = ev.Player;
 
                         for (int i = 0; i < plugin.Config.Magnitude; i++)
                         {
-                            grenade.FuseTime = 0.0f;
+                            grenade.FuseTime = 0.1f;
                             grenade.ScpMultiplier = plugin.Config.ScpMultiplier;
+                            grenade.SpawnActive(savedPlayerPosition, savedPlayerTeam);
                             ev.Player.Hurt(500, plugin.Config.CoinExplosionDeathReason);
-                            grenade.SpawnActive(ev.Player.Position, ev.Player);
                             new CandyPink.CandyExplosionMessage
                             {
                                 Origin = ev.Player.Position,
